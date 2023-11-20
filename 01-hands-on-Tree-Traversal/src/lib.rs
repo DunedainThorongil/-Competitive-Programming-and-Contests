@@ -81,6 +81,3 @@ impl Tree {
         }
     }
 }
-
-fn main() {
-}
