@@ -58,12 +58,12 @@ impl SegmentTree{
     }
     fn query_max(&mut self, v: i32, tl: i32, tr: i32, l: i32, r: i32) -> i32 {
         if l > r {
-            return -1;
+            return 0;
         }
         if l== tl && tr == r {
             return self.tree[v as usize];
         }
-        self.push(v);
+        //self.push(v);
         let tm = (tl + tr) / 2;
         return max(self.query_max(self.tree[(v*2) as usize], tl, tm, l, min(r, tm)),
                    self.query_max(self.tree[(v*2+1) as usize], tm+1, tr, max(l, tm+1), r))

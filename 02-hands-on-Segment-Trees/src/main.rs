@@ -38,7 +38,7 @@ fn read(file_pat: String) {
             else if value_split_int[0] == 1 { // Max(i, j)
                 let i: i32 = value_split_int[1];
                 let j: i32 = value_split_int[2];
-                println!("Risulato query Max: {}", tree.query(1, 0, dim_array-1, i, j))
+                println!("Risulato query Max: {}", tree.query(1, 0, dim_array, i, j))
 
             }
         }
