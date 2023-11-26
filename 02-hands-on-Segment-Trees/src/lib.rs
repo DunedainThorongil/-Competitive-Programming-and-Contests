@@ -28,6 +28,11 @@ impl SegmentTree{
         self.update_range(v, tl, tr, l, r, value);
     }
     fn update_range(&mut self, v: usize, tl: usize, tr: usize, l: usize, r: usize, value: usize){
+        /*
+        println!(
+            "Before update_range - v: {}, tl: {}, tr: {}, l: {}, r: {}, value: {}, tree: {:?}, lazy: {:?}",
+            v, tl, tr, l, r, value, self.tree, self.lazy
+        );*/
         if l > r {
             return;
         }
@@ -42,16 +47,25 @@ impl SegmentTree{
         } else {
             self.push(v);
             let tm = (tl + tr) / 2;
-            self.update( v*2, tl, tm, l, min(r, tm), value);
-            self.update(v*2 + 1, tm+1, tr, max(l, tm+1), r, value);
-            self.tree[v] = max(self.tree[v*2], self.tree[v*2+1]);
+            self.update_range(v*2, tl, tm, l, min(r, tm), value);
+            self.update_range(v*2 + 1, tm + 1, tr, max(l, tm + 1), r, value);
+            self.tree[v] = max(self.tree[v * 2], self.tree[v*2 + 1]);
         }
+        /*
+        println!(
+            "After update_range - v: {}, tl: {}, tr: {}, l: {}, r: {}, value: {}, tree: {:?}, lazy: {:?}",
+            v, tl, tr, l, r, value, self.tree, self.lazy
+        );
+
+         */
+        
     }
 
     pub fn push(&mut self, v: usize){
         self.push_update(v)
     }
     fn push_update(&mut self, v: usize){
+
         self.tree[v*2] = min(self.tree[v*2], self.lazy[v]);
         self.lazy[v*2] = min(self.lazy[v*2], self.lazy[v]);
         self.tree[v*2+1] = min(self.tree[v*2+1], self.lazy[v]);
@@ -71,8 +85,9 @@ impl SegmentTree{
         }
         self.push(v);
         let tm = (tl + tr) / 2;
-        return max(self.query_max(self.tree[v*2], tl, tm, l, min(r, tm)),
-                   self.query_max(self.tree[v*2+1], tm+1, tr, max(l, tm+1), r))
+       return max(self.query_max(v * 2, tl, tm, l, min(r, tm)),
+            self.query_max(v * 2 + 1, tm + 1, tr, max(l, tm + 1), r),
+        );
 
     }
 }
