@@ -1,72 +1,78 @@
 use std::cmp::{max, min};
 
 pub struct SegmentTree{
-    pub tree: Vec<i32>,
-    pub lazy: Vec<i32>
+    pub tree: Vec<usize>,
+    pub lazy: Vec<usize>,
+    pub size: usize
 }
 
 impl SegmentTree{
-    pub fn build_segment_tree(&mut self, array: Vec<i32>, len_array: i32, v: i32, tl: i32, tr: i32){
-        self.tree= vec![0; (len_array * 4) as usize];
-        self.lazy= vec![0; (len_array * 4) as usize];
-        self.build(&array, v, tl, tr);
+    pub fn new_segment_tree(&mut self, n: usize){
+        self.tree= vec![0; n * 4];
+        self.lazy= vec![n+1; n * 4];
+        self.size=n;
     }
 
-    fn build(&mut self, array: &Vec<i32>, v: i32, tl: i32, tr: i32){
+    pub fn build(&mut self, array: &Vec<usize>, v: usize, tl: usize, tr: usize){
         if tl == tr {
-            self.tree[v as usize] = array[tl as usize]
+            self.tree[v] = array[tl]
         } else {
-            let tm: i32 = (tl + tr) / 2;
+            let tm: usize = (tl + tr) / 2;
             self.build(array, v*2, tl, tm);
             self.build(array, v*2+1, tm+1, tr);
-            self.tree[v as usize] = max(self.tree[(v*2) as usize] , self.tree[(v*2 +1) as usize]);
+            self.tree[v] = max(self.tree[v*2] , self.tree[v*2 +1]);
         }
     }
 
-    pub fn update(&mut self, v: i32, tl: i32, tr: i32, l: i32, r: i32, value: i32){
+    pub fn update(&mut self, v: usize, tl: usize, tr: usize, l: usize, r: usize, value: usize){
         self.update_range(v, tl, tr, l, r, value);
     }
-    fn update_range(&mut self, v: i32, tl: i32, tr: i32, l: i32, r: i32, value:i32){
+    fn update_range(&mut self, v: usize, tl: usize, tr: usize, l: usize, r: usize, value: usize){
         if l > r {
             return;
         }
         if l == tl && tr == r {
-            self.tree[v as usize] += min(self.tree[v as usize], value);
-            self.lazy[v as usize] += min(self.lazy[v as usize], value);
+            let new_value: usize = min(self.tree[v], value);
+            if self.tree[v] != new_value {
+                self.tree[v] = new_value;
+                self.lazy[v] = value;
+            }
+            //self.tree[v as usize] += min(self.tree[v as usize], value);
+            //self.lazy[v as usize] += min(self.lazy[v as usize], value);
         } else {
             self.push(v);
             let tm = (tl + tr) / 2;
             self.update( v*2, tl, tm, l, min(r, tm), value);
-            self.update(v*2 +1, tm+1, tr, max(l, tm+1), r, value);
-            self.tree[v as usize] = max(self.tree[(v*2) as usize], self.tree[(v*2+1) as usize]);
+            self.update(v*2 + 1, tm+1, tr, max(l, tm+1), r, value);
+            self.tree[v] = max(self.tree[v*2], self.tree[v*2+1]);
         }
     }
 
-    pub fn push(&mut self, v: i32){
+    pub fn push(&mut self, v: usize){
         self.push_update(v)
     }
-    fn push_update(&mut self, v: i32){
-        self.tree[(v*2) as usize] = min(self.tree[(v*2) as usize],self.lazy[v as usize]);
-        self.lazy[(v*2) as usize] = min( self.lazy[(v*2) as usize],self.lazy[v as usize]);
-        self.tree[(v*2+1) as usize] = min( self.tree[(v*2+1) as usize],self.lazy[v as usize] );
-        self.lazy[(v*2+1) as usize] = min(self.lazy[(v*2+1) as usize], self.lazy[v as usize]);
-        self.lazy[v as usize] = 0;
+    fn push_update(&mut self, v: usize){
+        self.tree[v*2] = min(self.tree[v*2], self.lazy[v]);
+        self.lazy[v*2] = min(self.lazy[v*2], self.lazy[v]);
+        self.tree[v*2+1] = min(self.tree[v*2+1], self.lazy[v]);
+        self.lazy[v*2+1] = min(self.lazy[v*2+1], self.lazy[v]);
+        self.lazy[v] = self.size+1;
     }
 
-    pub fn query(&mut self, v: i32, tl: i32, tr: i32, l: i32, r: i32 ) -> i32 {
+    pub fn query(&mut self, v: usize, tl: usize, tr: usize, l: usize, r: usize ) -> usize {
         self.query_max(v, tl, tr, l, r)
     }
-    fn query_max(&mut self, v: i32, tl: i32, tr: i32, l: i32, r: i32) -> i32 {
+    fn query_max(&mut self, v: usize, tl: usize, tr: usize, l: usize, r: usize) -> usize {
         if l > r {
             return 0;
         }
         if l== tl && tr == r {
-            return self.tree[v as usize];
+            return self.tree[v];
         }
-        //self.push(v);
+        self.push(v);
         let tm = (tl + tr) / 2;
-        return max(self.query_max(self.tree[(v*2) as usize], tl, tm, l, min(r, tm)),
-                   self.query_max(self.tree[(v*2+1) as usize], tm+1, tr, max(l, tm+1), r))
+        return max(self.query_max(self.tree[v*2], tl, tm, l, min(r, tm)),
+                   self.query_max(self.tree[v*2+1], tm+1, tr, max(l, tm+1), r))
 
     }
 }
