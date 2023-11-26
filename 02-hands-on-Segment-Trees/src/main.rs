@@ -10,9 +10,9 @@ fn read(file_pat: String) {
     let file = File::open(file_pat).expect("Impossibile leggere il file");
     let mut reader = BufReader::new(file);
 
-    let mut conta_linea = 0;
-    let mut dim_array: i32 = 0;
-    let mut n_query: i32 = 0;
+    let mut conta_linea: i32= 0;
+    let mut dim_array: usize = 0;
+    let mut n_query: usize = 0;
 
 
     for line in reader.lines() {
@@ -25,20 +25,22 @@ fn read(file_pat: String) {
             n_query = value_split[1].parse().unwrap();
         }
         else if conta_linea == 2 {
-            let array: Vec<i32> = value_split.iter().map(|&s| s.parse().unwrap()).collect();
-            tree.build_segment_tree(array,dim_array, 1, 0, dim_array-1);
+            let array: Vec<usize> = value_split.iter().map(|&s| s.parse().unwrap()).collect();
+            tree.build(array, 1, 0, dim_array-1);
         }
         else if conta_linea > 2 {
-            let value_split_int: Vec<i32> = value_split.iter().map(|&s| s.parse().unwrap()).collect();
+            let value_split_int: Vec<usize> = value_split.iter().map(|&s| s.parse().unwrap()).collect();
             if value_split_int[0] == 0 { // Update (i, j, k)
-                let i: i32 = value_split_int[1] ;
-                let j: i32 = value_split_int[2] ;
-                let k: i32 = value_split_int[3] ;
+                let i: usize = value_split_int[1] ;
+                let j: usize = value_split_int[2] ;
+                let k: usize = value_split_int[3] ;
+                tree.update(1, 0, dim_array-1, i-1, j-1, k);
+                println!("Query Update!");
             }
             else if value_split_int[0] == 1 { // Max(i, j)
-                let i: i32 = value_split_int[1];
-                let j: i32 = value_split_int[2];
-                println!("Risulato query Max: {}", tree.query(1, 0, dim_array, i, j))
+                let i: usize = value_split_int[1];
+                let j: usize = value_split_int[2];
+                println!("Response query Max: {}", tree.query(1, 0, dim_array-1, i-1, j-1))
 
             }
         }
