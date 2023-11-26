@@ -92,5 +92,20 @@ fn main() {
 
     }
 
+    /// SECONDO ESERCIZIO
+
+    let intervals = vec![(2, 6), (3, 8), (4, 6), (1, 1), (5, 9), (6, 7), (8, 9), (0, 7), (1, 2), (2, 7)];
+    let array = create_array(&intervals);
+    let mut segment_tree: SegmentTreeSegments = SegmentTreeSegments{ size: 0, tree: vec![] };
+    segment_tree.new_segment_tree_s(array.len());
+    segment_tree.build(&array, 1, 0, intervals.len() - 1);
+
+    let queries = vec![(1, 7, 8), (4, 6, 6), (7, 7, 6), (5, 9, 3), (7, 8, 1), (1, 2, 0), (3, 7, 0), (4, 8, 6), (6, 9, 8)];
+
+    for (i, j, k) in queries {
+        let result = segment_tree.is_there(i, j, k);
+        println!("{}", result);
+    }
+
 
 }
