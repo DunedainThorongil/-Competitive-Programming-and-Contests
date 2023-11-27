@@ -99,8 +99,19 @@ enum PointKind {
 }
 
 pub struct SegmentTreeSegments{
-    pub(crate) size: usize,
-    pub(crate) tree: Vec<usize>
+    pub size: usize,
+    pub tree: Vec<usize>
+}
+
+#[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Clone, Copy)]
+enum EventType {
+    Begin,
+    End,
+}
+#[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Clone, Copy)]
+struct Event {
+    num: usize,
+    event_type: EventType,
 }
 
 impl SegmentTreeSegments {
@@ -120,53 +131,60 @@ impl SegmentTreeSegments {
         }
     }
 
-    pub fn is_there(&self, i: usize, j: usize, k: usize) -> usize {
-        self.is_there_recursive(1, 0, self.size - 1, i, j, k)
-    }
-
-    fn is_there_recursive(&self, v: usize, tl: usize, tr: usize, l: usize, r: usize, k: usize) -> usize {
-        if l > r {
+    pub fn is_there(&mut self, v: usize, tl: usize, tr: usize, i: usize, j :usize, k: usize) -> usize {
+        if i > j {
             return 0;
         }
 
-        if l == tl && r == tr {
-            return if self.tree[v] == k { 1 } else { 0 };
+        if i == tl && j == tr {
+            if self.tree[v]  == k {
+                return 1;
+            } else if tl != tr {
+                let tm :usize = (tl + tr) / 2;
+                return max(self.is_there(v*2, tl, tm, i, min(j, tm), k), self.is_there(v*2+1, tm+1, tr, max(i,tm+1), j, k));
+            } else {
+                return 0;
+            }
         }
-
-        let tm = (tl + tr) / 2;
-        let left_count = self.is_there_recursive(v * 2, tl, tm, l, min(r, tm), k);
-        let right_count = self.is_there_recursive(v * 2 + 1, tm + 1, tr, max(l, tm + 1), r, k);
-
-        left_count + right_count
+        let tm : usize =(tl +tr)/2;
+        return max(self.is_there(v*2, tl, tm, i, min(j, tm), k), self.is_there(v*2+1, tm+1, tr, max(i,tm+1), j, k));
     }
 }
-pub fn create_array(intervals: &[(usize, usize)]) -> Vec<usize> {
-    let mut pairs: Vec<_> = intervals
-        .iter()
-        .flat_map(|&(b, e)| [(b, PointKind::Begin), (e, PointKind::End)])
-        .collect();
 
-    pairs.sort_unstable();
+pub fn sweep_line(intervals: &Vec<(usize, usize)>) -> Vec<usize> {
+    let mut events: Vec<Event> = Vec::new();
+    let mut array: Vec<usize> = Vec::new();
 
-    let mut counter = 0;
-    let mut point_segments: HashMap<usize, usize> = HashMap::new();
-    let mut result_array: Vec<usize> = Vec::new();
+    for &(begin, end) in intervals {
+        events.push(Event { num: begin, event_type: EventType::Begin });
+        events.push(Event { num: end, event_type: EventType::End });
+    }
 
-    for (point, kind) in pairs {
-        match kind {
-            PointKind::Begin => {
-                counter += 1;
-            }
-            PointKind::End => {
-                counter -= 1;
+    events.sort_unstable();
+
+    let max_x = events.iter().map(|event| event.num).max().unwrap();
+    array = vec![0; (max_x + 1)];
+
+    for i in 0..=max_x {
+        if i != 0 {
+            array[i] += array[(i - 1)];
+        }
+
+        for event in &events {
+            match event.event_type {
+                EventType::Begin => {
+                    if event.num == i {
+                        array[i] += 1;
+                    }
+                }
+                EventType::End => {
+                    if event.num == i && array[i] > 0 {
+                        array[i] -= 1;
+                    }
+                }
             }
         }
-        point_segments.insert(point, counter);
     }
 
-    for i in 0..intervals.len() {
-        result_array.push(point_segments[&intervals[i].0]);
-    }
-
-    return result_array
+    return array;
 }
